@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System | Enterprise Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* Modern Sidebar Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #1a1c2e 0%, #2a1f3d 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo h2 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 30px 0;
+        }
+
+        .nav-item {
+            padding: 12px 25px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-icon {
+            font-size: 1.2em;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title h1 {
+            font-size: 1.8em;
+            color: #1a1c2e;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+
+        .status-dot.offline {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Stats Cards */
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card-modern {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .stat-card-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            font-size: 2em;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #1a1c2e;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .card-header h3 {
+            font-size: 1.3em;
+            color: #1a1c2e;
+        }
+
+        /* Tables */
+        .data-table {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        /* Token Display */
+        .token-display {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #667eea;
+            padding: 5px 10px;
+            font-size: 0.7em;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #666;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .badge-student { background: #e3f2fd; color: #1976d2; }
+        .badge-trainer { background: #fff3e0; color: #f57c00; }
+        .badge-institution { background: #e8f5e9; color: #388e3c; }
+        .badge-monitor { background: #f3e5f5; color: #7b1fa2; }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2>📚 AttendancePro</h2>
+                <p>Enterprise Attendance System</p>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" onclick="showSection('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="showSection('users')">
+                    <span class="nav-icon">👥</span>
+                    <span>User Management</span>
+                </div>
+                <div class="nav-item" onclick="showSection('auth')">
+                    <span class="nav-icon">🔐</span>
+                    <span>Authentication</span>
+                </div>
+                <div class="nav-item" onclick="showSection('batches')">
+                    <span class="nav-icon">📦</span>
+                    <span>Batches</span>
+                </div>
+                <div class="nav-item" onclick="showSection('attendance')">
+                    <span class="nav-icon">✅</span>
+                    <span>Attendance</span>
+                </div>
+                <div class="nav-item" onclick="showSection('reports')">
+                    <span class="nav-icon">📈</span>
+                    <span>Reports</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="api-status">
+                    <div class="status-indicator">
+                        <div class="status-dot online" id="apiStatusDot"></div>
+                        <span id="apiStatusText">API Connected</span>
+                    </div>
+                    <button onclick="refreshAllData()" style="padding: 8px 15px;">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection">
+                <div class="stats-dashboard">
+                    <div class="stat-card-modern" onclick="showSection('users')">
+                        <div class="stat-header">
+                            <span class="stat-icon">👥</span>
+                        </div>
+                        <div class="stat-value" id="statTotalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card-modern" onclick="filterAndShow('student')">
+                        <div class="stat-header">
+                            <span class="stat-icon">🎓</span>
+                        </div>
+                        <div class="stat-value" id="statStudents">0</div>
+                        <div class="stat-label">Students</div>
+                    </div>
+                    <div class="stat-card-modern" onclick="filterAndShow('trainer')">
+                        <div class="stat-header">
+                            <span class="stat-icon">👨‍🏫</span>
+                        </div>
+                        <div class="stat-value" id="statTrainers">0</div>
+                        <div class="stat-label">Trainers</div>
+                    </div>
+                    <div class="stat-card-modern" onclick="filterAndShow('institution')">
+                        <div class="stat-header">
+                            <span class="stat-icon">🏛️</span>
+                        </div>
+                        <div class="stat-value" id="statInstitutions">0</div>
+                        <div class="stat-label">Institutions</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🏛️ Recent Institutions</h3>
+                            <button onclick="showSection('users')" class="secondary">View All</button>
+                        </div>
+                        <div id="recentInstitutions"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🎓 Recent Students</h3>
+                            <button onclick="showSection('users')" class="secondary">View All</button>
+                        </div>
+                        <div id="recentStudents"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔑 Quick Login</h3>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="quickLoginEmail" placeholder="Enter email">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="quickLoginPassword" placeholder="Enter password">
+                            </div>
+                            <button onclick="quickLogin()">Login →</button>
+                            <div id="quickLoginResult"></div>
+                        </div>
+                        <div>
+                            <div class="alert alert-info">
+                                <strong>💡 Demo Credentials:</strong><br>
+                                Student: student@test.com / test123<br>
+                                Trainer: trainer@test.com / trainer123<br>
+                                Institution: admin@test.com / admin123
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="usersSection" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👥 All Users</h3>
+                        <button onclick="loadUsers()">🔄 Refresh</button>
+                    </div>
+                    <div class="data-table" id="usersTable"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>➕ Create New User</h3>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="newUserName" placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="newUserEmail" placeholder="user@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="newUserPassword" placeholder="********">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="newUserRole">
+                                    <option value="student">Student</option>
+                                    <option value="trainer">Trainer</option>
+                                    <option value="institution">Institution</option>
+                                    <option value="monitoring_officer">Monitoring Officer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Institution Name (for student/trainer)</label>
+                                <input type="text" id="newUserInstitution" placeholder="Institution name">
+                            </div>
+                            <button onclick="createNewUser()">Create User →</button>
+                            <div id="createUserResult"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Section -->
+            <div id="authSection" style="display:none;">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🔐 Login Test</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="authEmail" placeholder="user@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="authPassword" placeholder="********">
+                        </div>
+                        <button onclick="testAuthLogin()">Test Login</button>
+                        <div id="authResult"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🎫 Get Your Token</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="tokenEmail" placeholder="user@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="tokenPassword" placeholder="********">
+                        </div>
+                        <button onclick="getAuthToken()">Generate Token</button>
+                        <div id="tokenResult"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔑 Active Tokens</h3>
+                        <button onclick="loadTokens()">🔄 Refresh Tokens</button>
+                    </div>
+                    <div id="tokensContainer"></div>
+                </div>
+            </div>
+
+            <!-- Batches Section -->
+            <div id="batchesSection" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📦 Create New Batch</h3>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label>Batch Name</label>
+                                <input type="text" id="batchName" placeholder="e.g., Computer Science 2024">
+                            </div>
+                            <div class="form-group">
+                                <label>Institution ID</label>
+                                <input type="number" id="batchInstitutionId" placeholder="Institution ID">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>Trainer Token (for auth)</label>
+                                <input type="text" id="trainerToken" placeholder="Paste trainer token here">
+                            </div>
+                            <button onclick="createBatch()">Create Batch →</button>
+                        </div>
+                    </div>
+                    <div id="batchResult"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔗 Join Batch with Invite</h3>
+                    </div>
+                    <div class="form-group">
+                        <label>Invite Token</label>
+                        <input type="text" id="inviteToken" placeholder="Paste invite token">
+                    </div>
+                    <div class="form-group">
+                        <label>Student Token</label>
+                        <input type="text" id="studentJoinToken" placeholder="Paste student token">
+                    </div>
+                    <button onclick="joinBatch()">Join Batch</button>
+                    <div id="joinResult"></div>
+                </div>
+            </div>
+
+            <!-- Attendance Section -->
+            <div id="attendanceSection" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>✅ Mark Attendance</h3>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label>Session ID</label>
+                                <input type="number" id="sessionId" placeholder="Session ID">
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="attendanceStatus">
+                                    <option value="present">Present</option>
+                                    <option value="absent">Absent</option>
+                                    <option value="late">Late</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>Student Token</label>
+                                <input type="text" id="studentAttendanceToken" placeholder="Student token">
+                            </div>
+                            <button onclick="markAttendance()">Mark Attendance →</button>
+                        </div>
+                    </div>
+                    <div id="attendanceResult"></div>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reportsSection" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📊 System Report</h3>
+                    </div>
+                    <div id="systemReport"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8006';
+        let allUsers = [];
+        let activeTokens = {};
+
+        // Navigation
+        function showSection(section) {
+            const sections = ['dashboard', 'users', 'auth', 'batches', 'attendance', 'reports'];
+            sections.forEach(s => {
+                document.getElementById(s + 'Section').style.display = 'none';
+            });
+            document.getElementById(section + 'Section').style.display = 'block';
+            
+            const titles = {
+                dashboard: 'Dashboard',
+                users: 'User Management',
+                auth: 'Authentication',
+                batches: 'Batch Management',
+                attendance: 'Attendance Tracking',
+                reports: 'Reports & Analytics'
+            };
+            document.getElementById('pageTitle').innerText = titles[section];
+            
+            // Load data based on section
+            if (section === 'users') loadUsers();
+            if (section === 'auth') loadTokens();
+            if (section === 'dashboard') loadDashboardData();
+            if (section === 'reports') loadReport();
+        }
+
+        // API Call Helper
+        async function callAPI(endpoint, method = 'GET', data = null, token = null) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            
+            const options = { method, headers };
+            if (data) options.body = JSON.stringify(data);
+            
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, options);
+                const responseData = await response.json().catch(() => ({}));
+                return { ok: response.ok, status: response.status, data: responseData };
+            } catch (error) {
+                return { ok: false, status: 0, data: { error: error.message } };
+            }
+        }
+
+        // Load Dashboard Data
+        async function loadDashboardData() {
+            // Load institutions
+            const instResult = await callAPI('/users/institutions', 'GET');
+            if (instResult.ok) {
+                const institutions = instResult.data.slice(0, 5);
+                let html = '<div style="padding:10px">';
+                institutions.forEach(inst => {
+                    html += `<div style="padding:10px; border-bottom:1px solid #eee">
+                        <strong>🏛️ ${inst.name}</strong><br>
+                        <small>ID: ${inst.id} | Email: ${inst.email}</small>
+                    </div>`;
+                });
+                html += institutions.length === 0 ? '<p>No institutions found</p>' : '';
+                html += '</div>';
+                document.getElementById('recentInstitutions').innerHTML = html;
+            }
+            
+            // Try to load users with trainer token
+            const loginResult = await callAPI('/auth/login', 'POST', { email: 'trainer@techuniversity.com', password: 'trainer123' });
+            if (loginResult.ok) {
+                const token = loginResult.data.access_token;
+                const usersResult = await callAPI('/users/', 'GET', null, token);
+                if (usersResult.ok) {
+                    allUsers = usersResult.data;
+                    const students = allUsers.filter(u => u.role === 'student').slice(0, 5);
+                    let html = '<div style="padding:10px">';
+                    students.forEach(student => {
+                        html += `<div style="padding:10px; border-bottom:1px solid #eee">
+                            <strong>🎓 ${student.name}</strong><br>
+                            <small>Email: ${student.email}</small>
+                        </div>`;
+                    });
+                    html += students.length === 0 ? '<p>No students found</p>' : '';
+                    html += '</div>';
+                    document.getElementById('recentStudents').innerHTML = html;
+                    
+                    // Update stats
+                    document.getElementById('statTotalUsers').innerText = allUsers.length;
+                    document.getElementById('statStudents').innerText = allUsers.filter(u => u.role === 'student').length;
+                    document.getElementById('statTrainers').innerText = allUsers.filter(u => u.role === 'trainer').length;
+                    document.getElementById('statInstitutions').innerText = allUsers.filter(u => u.role === 'institution').length;
+                }
+            }
+        }
+
+        // Load Users
+        async function loadUsers() {
+            const loginResult = await callAPI('/auth/login', 'POST', { email: 'trainer@techuniversity.com', password: 'trainer123' });
+            if (!loginResult.ok) {
+                document.getElementById('usersTable').innerHTML = '<p class="alert alert-error">❌ Please create a trainer first</p>';
+                return;
+            }
+            
+            const token = loginResult.data.access_token;
+            const usersResult = await callAPI('/users/', 'GET', null, token);
+            
+            if (usersResult.ok) {
+                allUsers = usersResult.data;
+                let html = `<table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Institution ID</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                allUsers.forEach(user => {
+                    const badgeClass = `badge-${user.role}`;
+                    html += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td><strong>${user.name}</strong></td>
+                            <td>${user.email}</td>
+                            <td><span class="badge ${badgeClass}">${user.role}</span></td>
+                            <td>${user.institution_id || '-'}</td>
+                            <td><button onclick="getUserToken(${user.id}, '${user.email}')">Get Token</button></td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table>';
+                document.getElementById('usersTable').innerHTML = html;
+            } else {
+                document.getElementById('usersTable').innerHTML = `<p class="alert alert-error">❌ Failed to load users</p>`;
+            }
+        }
+
+        // Create New User
+        async function createNewUser() {
+            const name = document.getElementById('newUserName').value;
+            const email = document.getElementById('newUserEmail').value;
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+            const institutionName = document.getElementById('newUserInstitution').value;
+            
+            if (!name || !email || !password) {
+                showMessage('createUserResult', 'Please fill all required fields', 'error');
+                return;
+            }
+            
+            const payload = { name, email, password, role };
+            if (institutionName && (role === 'student' || role === 'trainer')) {
+                payload.institution_name = institutionName;
+            }
+            
+            const result = await callAPI('/auth/signup', 'POST', payload);
+            
+            if (result.ok) {
+                showMessage('createUserResult', `✅ User "${name}" created successfully! Token: ${result.data.access_token.substring(0, 50)}...`, 'success');
+                document.getElementById('newUserName').value = '';
+                document.getElementById('newUserEmail').value = '';
+                document.getElementById('newUserPassword').value = '';
+                document.getElementById('newUserInstitution').value = '';
+                loadUsers();
+            } else {
+                showMessage('createUserResult', `❌ Error: ${result.data.detail || 'Unknown error'}`, 'error');
+            }
+        }
+
+        // Test Login
+        async function testAuthLogin() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                showMessage('authResult', 'Please enter email and password', 'error');
+                return;
+            }
+            
+            const result = await callAPI('/auth/login', 'POST', { email, password });
+            
+            if (result.ok) {
+                showMessage('authResult', `
+                    ✅ Login successful!<br>
+                    <strong>User ID:</strong> ${result.data.user_id}<br>
+                    <strong>Role:</strong> ${result.data.role}<br>
+                    <strong>Token:</strong> <code>${result.data.access_token.substring(0, 80)}...</code>
+                `, 'success');
+            } else {
+                showMessage('authResult', `❌ Login failed: ${result.data.detail || 'Invalid credentials'}`, 'error');
+            }
+        }
+
+        // Get Auth Token
+        async function getAuthToken() {
+            const email = document.getElementById('tokenEmail').value;
+            const password = document.getElementById('tokenPassword').value;
+            
+            const result = await callAPI('/auth/login', 'POST', { email, password });
+            
+            if (result.ok) {
+                document.getElementById('tokenResult').innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Token Generated!</strong><br>
+                        <div class="token-display" style="margin-top:10px">
+                            ${result.data.access_token}
+                            <button class="copy-btn" onclick="copyToClipboard('${result.data.access_token}')">Copy</button>
+                        </div>
+                        <small>User: ${result.data.name} (${result.data.role})</small>
+                    </div>
+                `;
+            } else {
+                showMessage('tokenResult', `❌ Error: ${result.data.detail}`, 'error');
+            }
+        }
+
+        // Load Tokens
+        async function loadTokens() {
+            const credentials = [
+                { name: "Demo Student", email: "student@test.com", password: "test123" },
+                { name: "Demo Trainer", email: "trainer@test.com", password: "trainer123" },
+                { name: "Demo Institution", email: "admin@test.com", password: "admin123" }
+            ];
+            
+            let html = '<div class="grid-2">';
+            
+            for (const cred of credentials) {
+                const result = await callAPI('/auth/login', 'POST', { email: cred.email, password: cred.password });
+                
+                if (result.ok) {
+                    html += `
+                        <div class="card" style="padding:15px">
+                            <strong>${cred.name}</strong><br>
+                            <small>${cred.email}</small>
+                            <div class="token-display" style="margin-top:10px">
+                                ${result.data.access_token.substring(0, 60)}...
+                                <button class="copy-btn" onclick="copyToClipboard('${result.data.access_token}')">Copy</button>
+                            </div>
+                            <button onclick="testToken('${result.data.access_token}')" style="margin-top:10px; width:100%">Test Token</button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="card" style="padding:15px; background:#f8d7da">
+                            <strong>${cred.name}</strong><br>
+                            <small>${cred.email}</small>
+                            <div class="alert alert-error" style="margin-top:10px">❌ Not found - Create first</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += '</div>';
+            document.getElementById('tokensContainer').innerHTML = html;
+        }
+
+        // Create Batch
+        async function createBatch() {
+            const name = document.getElementById('batchName').value;
+            const institutionId = document.getElementById('batchInstitutionId').value;
+            const token = document.getElementById('trainerToken').value;
+            
+            if (!name || !institutionId || !token) {
+                showMessage('batchResult', 'Please fill all fields and provide trainer token', 'error');
+                return;
+            }
+            
+            const result = await callAPI('/batches', 'POST', { name, institution_id: parseInt(institutionId) }, token);
+            
+            if (result.ok) {
+                showMessage('batchResult', `✅ Batch "${name}" created! ID: ${result.data.id}`, 'success');
+            } else {
+                showMessage('batchResult', `❌ Error: ${result.data.detail || 'Unknown error'}`, 'error');
+            }
+        }
+
+        // Join Batch
+        async function joinBatch() {
+            const inviteToken = document.getElementById('inviteToken').value;
+            const studentToken = document.getElementById('studentJoinToken').value;
+            
+            const result = await callAPI('/batches/join', 'POST', { token: inviteToken }, studentToken);
+            
+            if (result.ok) {
+                showMessage('joinResult', `✅ Successfully joined batch! Batch ID: ${result.data.batch_id}`, 'success');
+            } else {
+                showMessage('joinResult', `❌ Error: ${result.data.detail || 'Invalid invite'}`, 'error');
+            }
+        }
+
+        // Mark Attendance
+        async function markAttendance() {
+            const sessionId = document.getElementById('sessionId').value;
+            const status = document.getElementById('attendanceStatus').value;
+            const token = document.getElementById('studentAttendanceToken').value;
+            
+            if (!sessionId || !token) {
+                showMessage('attendanceResult', 'Please fill session ID and student token', 'error');
+                return;
+            }
+            
+            const result = await callAPI('/attendance/mark', 'POST', { session_id: parseInt(sessionId), status }, token);
+            
+            if (result.ok) {
+                showMessage('attendanceResult', `✅ Attendance marked as ${status} for session ${sessionId}`, 'success');
+            } else {
+                showMessage('attendanceResult', `❌ Error: ${result.data.detail || 'Failed to mark attendance'}`, 'error');
+            }
+        }
+
+        // Quick Login
+        async function quickLogin() {
+            const email = document.getElementById('quickLoginEmail').value;
+            const password = document.getElementById('quickLoginPassword').value;
+            
+            const result = await callAPI('/auth/login', 'POST', { email, password });
+            
+            if (result.ok) {
+                showMessage('quickLoginResult', `
+                    ✅ Login successful!<br>
+                    <strong>Welcome ${result.data.name}!</strong><br>
+                    Role: ${result.data.role}<br>
+                    <div class="token-display" style="margin-top:10px">
+                        Your Token: ${result.data.access_token.substring(0, 60)}...
+                        <button class="copy-btn" onclick="copyToClipboard('${result.data.access_token}')">Copy</button>
+                    </div>
+                `, 'success');
+            } else {
+                showMessage('quickLoginResult', `❌ Login failed: ${result.data.detail}`, 'error');
+            }
+        }
+
+        // Load Report
+        async function loadReport() {
+            const loginResult = await callAPI('/auth/login', 'POST', { email: 'trainer@techuniversity.com', password: 'trainer123' });
+            
+            let html = '<div class="grid-2">';
+            
+            if (loginResult.ok) {
+                const token = loginResult.data.access_token;
+                const usersResult = await callAPI('/users/', 'GET', null, token);
+                
+                if (usersResult.ok) {
+                    const users = usersResult.data;
+                    const students = users.filter(u => u.role === 'student');
+                    const trainers = users.filter(u => u.role === 'trainer');
+                    const institutions = users.filter(u => u.role === 'institution');
+                    
+                    html += `
+                        <div class="card">
+                            <h4>📊 User Statistics</h4>
+                            <div style="padding:15px">
+                                <p><strong>Total Users:</strong> ${users.length}</p>
+                                <p><strong>Students:</strong> ${students.length}</p>
+                                <p><strong>Trainers:</strong> ${trainers.length}</p>
+                                <p><strong>Institutions:</strong> ${institutions.length}</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4>🏛️ Institutions List</h4>
+                            <div style="padding:15px">
+                                ${institutions.map(i => `<p><strong>${i.name}</strong><br><small>${i.email}</small></p>`).join('')}
+                                ${institutions.length === 0 ? '<p>No institutions created yet</p>' : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                html += '<div class="card"><p class="alert alert-info">💡 Create a trainer first to see reports. Use the User Management section.</p></div>';
+            }
+            
+            html += '</div>';
+            document.getElementById('systemReport').innerHTML = html;
+        }
+
+        // Helper Functions
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                if (element) element.innerHTML = '';
+            }, 5000);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('✅ Token copied to clipboard!');
+        }
+
+        async function testToken(token) {
+            const result = await callAPI('/auth/me', 'GET', null, token);
+            if (result.ok) {
+                alert(`✅ Token valid!\nUser: ${result.data.name} (${result.data.role})`);
+            } else {
+                alert('❌ Token invalid or expired');
+            }
+        }
+
+        async function getUserToken(userId, email) {
+            // This would require knowing the password - for demo, show info
+            alert(`To get token for ${email}, use the Authentication section and login with credentials`);
+        }
+
+        function filterAndShow(role) {
+            showSection('users');
+            setTimeout(() => {
+                if (allUsers.length > 0) {
+                    const filtered = allUsers.filter(u => u.role === role);
+                    let html = `<table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+                        <tbody>${filtered.map(u => `<tr><td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td></tr>`).join('')}</tbody>
+                    </table>`;
+                    document.getElementById('usersTable').innerHTML = html;
+                }
+            }, 500);
+        }
+
+        async function refreshAllData() {
+            await loadDashboardData();
+            if (document.getElementById('usersSection').style.display !== 'none') await loadUsers();
+            if (document.getElementById('authSection').style.display !== 'none') await loadTokens();
+            if (document.getElementById('reportsSection').style.display !== 'none') await loadReport();
+        }
+
+        async function checkAPI() {
+            const result = await callAPI('/health', 'GET');
+            const dot = document.getElementById('apiStatusDot');
+            const text = document.getElementById('apiStatusText');
+            
+            if (result.ok) {
+                dot.className = 'status-dot online';
+                text.innerText = 'API Connected';
+            } else {
+                dot.className = 'status-dot offline';
+                text.innerText = 'API Offline';
+            }
+        }
+
+        // Initialize
+        checkAPI();
+        loadDashboardData();
+        setInterval(checkAPI, 30000);
+    </script>
+</body>
+</html>

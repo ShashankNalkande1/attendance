@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System - Complete Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .status-online {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-offline {
+            background: #f44336;
+            color: white;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Test Sections */
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: inline-block;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .test-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .test-card.passed {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .test-card.failed {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .test-card.pending {
+            background: #fff3cd;
+            border-color: #ffeeba;
+        }
+
+        .test-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .test-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .status-pass {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-fail {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-pending {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .test-detail {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        .token-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f5f5f5;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 Attendance System - Complete Dashboard</h1>
+            <p>Real-time testing and monitoring dashboard</p>
+            <div id="apiStatus" class="status-badge status-offline">🔴 Checking API...</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card" onclick="loadUsers()">
+                <div class="stat-number" id="totalUsers">-</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card" onclick="filterUsers('student')">
+                <div class="stat-number" id="totalStudents">-</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-card" onclick="filterUsers('trainer')">
+                <div class="stat-number" id="totalTrainers">-</div>
+                <div class="stat-label">Trainers</div>
+            </div>
+            <div class="stat-card" onclick="filterUsers('institution')">
+                <div class="stat-number" id="totalInstitutions">-</div>
+                <div class="stat-label">Institutions</div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-section">
+            <h2>🧪 API Test Results</h2>
+            <div id="testResults"></div>
+        </div>
+
+        <!-- Users List -->
+        <div class="test-section">
+            <h2>👥 Users in Database</h2>
+            <button onclick="loadUsers()">🔄 Refresh Users</button>
+            <div id="usersList"></div>
+        </div>
+
+        <!-- Institutions List -->
+        <div class="test-section">
+            <h2>🏛️ Institutions</h2>
+            <button onclick="loadInstitutions()">🔄 Refresh Institutions</button>
+            <div id="institutionsList"></div>
+        </div>
+
+        <!-- Tokens -->
+        <div class="test-section">
+            <h2>🔑 Authentication Tokens</h2>
+            <button onclick="refreshTokens()">🔄 Refresh Tokens</button>
+            <div id="tokensList"></div>
+        </div>
+
+        <!-- Quick Test -->
+        <div class="test-section">
+            <h2>⚡ Quick Actions</h2>
+            <div class="test-grid">
+                <div>
+                    <h3>Create Test Student</h3>
+                    <input type="text" id="testName" placeholder="Name" value="Test Student">
+                    <input type="email" id="testEmail" placeholder="Email" value="test@student.com">
+                    <input type="text" id="testInstitution" placeholder="Institution Name" value="Test University">
+                    <button onclick="createTestStudent()">Create Student</button>
+                    <div id="createResult"></div>
+                </div>
+                <div>
+                    <h3>Test Login</h3>
+                    <input type="email" id="loginEmail" placeholder="Email">
+                    <input type="password" id="loginPassword" placeholder="Password">
+                    <button onclick="testLogin()">Test Login</button>
+                    <div id="loginResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8006';
+        let allUsers = [];
+        let testTokens = {};
+
+        // Test cases
+        const testCases = [
+            { name: "Health Check", endpoint: "/health", method: "GET" },
+            { name: "Create Institution", endpoint: "/auth/signup", method: "POST", data: { name: "Test Inst", email: "test@inst.com", password: "test123", role: "institution" } },
+            { name: "Institution Login", endpoint: "/auth/login", method: "POST", data: { email: "test@inst.com", password: "test123" } },
+            { name: "Create Student", endpoint: "/auth/signup", method: "POST", data: { name: "Test Student", email: "student@test.com", password: "test123", role: "student", institution_name: "Test Inst" } },
+            { name: "Student Login", endpoint: "/auth/login", method: "POST", data: { email: "student@test.com", password: "test123" } },
+            { name: "Get Users", endpoint: "/users/", method: "GET", requiresAuth: true },
+            { name: "Get Institutions", endpoint: "/users/institutions", method: "GET" },
+            { name: "Get Current User", endpoint: "/auth/me", method: "GET", requiresAuth: true }
+        ];
+
+        async function callAPI(endpoint, method, data = null, token = null) {
+            const headers = { "Content-Type": "application/json" };
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+            
+            const options = { method, headers };
+            if (data) options.body = JSON.stringify(data);
+            
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, options);
+                const responseData = await response.json().catch(() => ({}));
+                return { ok: response.ok, status: response.status, data: responseData };
+            } catch (error) {
+                return { ok: false, status: 0, data: { error: error.message } };
+            }
+        }
+
+        async function runAllTests() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<div class="loading"></div> Running tests...';
+            
+            let resultsHtml = '<div class="test-grid">';
+            let authToken = null;
+            
+            for (const test of testCases) {
+                const startTime = Date.now();
+                let result;
+                
+                if (test.requiresAuth && !authToken) {
+                    result = { ok: false, data: { detail: "No auth token available" } };
+                } else {
+                    result = await callAPI(test.endpoint, test.method, test.data, authToken);
+                    if (test.name === "Institution Login" && result.ok && result.data.access_token) {
+                        authToken = result.data.access_token;
+                    }
+                    if (test.name === "Student Login" && result.ok && result.data.access_token) {
+                        testTokens.student = result.data.access_token;
+                    }
+                }
+                
+                const duration = Date.now() - startTime;
+                const statusClass = result.ok ? 'passed' : 'failed';
+                const statusText = result.ok ? '✅ PASS' : '❌ FAIL';
+                
+                resultsHtml += `
+                    <div class="test-card ${statusClass}">
+                        <div class="test-title">${test.name}</div>
+                        <div class="test-status ${result.ok ? 'status-pass' : 'status-fail'}">${statusText}</div>
+                        <div class="test-detail">
+                            ${result.ok ? `✓ Status: ${result.status}` : `✗ Error: ${result.data.detail || result.data.error || 'Unknown error'}`}
+                            <br>⏱️ ${duration}ms
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultsHtml += '</div>';
+            resultsDiv.innerHTML = resultsHtml;
+        }
+
+        async function loadUsers() {
+            const usersDiv = document.getElementById('usersList');
+            usersDiv.innerHTML = '<div class="loading"></div> Loading users...';
+            
+            // Try to get trainer token first
+            let token = testTokens.trainer;
+            if (!token) {
+                const loginResult = await callAPI("/auth/login", "POST", { email: "trainer@techuniversity.com", password: "trainer123" });
+                if (loginResult.ok) {
+                    token = loginResult.data.access_token;
+                    testTokens.trainer = token;
+                }
+            }
+            
+            if (!token) {
+                usersDiv.innerHTML = '<p class="error">⚠️ No trainer token available. Please login first.</p>';
+                return;
+            }
+            
+            const result = await callAPI("/users/", "GET", null, token);
+            
+            if (result.ok && result.data) {
+                allUsers = result.data;
+                const students = allUsers.filter(u => u.role === 'student');
+                const trainers = allUsers.filter(u => u.role === 'trainer');
+                const institutions = allUsers.filter(u => u.role === 'institution');
+                
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                document.getElementById('totalStudents').textContent = students.length;
+                document.getElementById('totalTrainers').textContent = trainers.length;
+                document.getElementById('totalInstitutions').textContent = institutions.length;
+                
+                let tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Institution ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                allUsers.forEach(user => {
+                    tableHtml += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td><span class="status-pass" style="background:#667eea">${user.role}</span></td>
+                            <td>${user.institution_id || '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += '</tbody></table>';
+                usersDiv.innerHTML = tableHtml;
+            } else {
+                usersDiv.innerHTML = `<p class="error">❌ Failed to load users: ${result.data.detail || 'Unknown error'}</p>`;
+            }
+        }
+
+        async function loadInstitutions() {
+            const instDiv = document.getElementById('institutionsList');
+            instDiv.innerHTML = '<div class="loading"></div> Loading institutions...';
+            
+            const result = await callAPI("/users/institutions", "GET");
+            
+            if (result.ok && result.data) {
+                let html = '<ul style="list-style:none">';
+                result.data.forEach(inst => {
+                    html += `<li style="padding:10px; border-bottom:1px solid #eee">🏛️ <strong>${inst.name}</strong> (ID: ${inst.id}) - ${inst.email}</li>`;
+                });
+                html += '</ul>';
+                instDiv.innerHTML = html;
+            } else {
+                instDiv.innerHTML = `<p class="error">❌ Failed to load institutions</p>`;
+            }
+        }
+
+        async function refreshTokens() {
+            const tokensDiv = document.getElementById('tokensList');
+            tokensDiv.innerHTML = '<div class="loading"></div> Getting tokens...';
+            
+            const credentials = [
+                { name: "Institution", email: "admin@techuniversity.com", password: "admin123" },
+                { name: "Trainer", email: "trainer@techuniversity.com", password: "trainer123" },
+                { name: "Student", email: "rituraj@student.com", password: "student123" },
+                { name: "Monitor", email: "monitor@techuniversity.com", password: "monitor123" }
+            ];
+            
+            let html = '<div class="test-grid">';
+            
+            for (const cred of credentials) {
+                const result = await callAPI("/auth/login", "POST", { email: cred.email, password: cred.password });
+                
+                if (result.ok && result.data.access_token) {
+                    testTokens[cred.name.toLowerCase()] = result.data.access_token;
+                    html += `
+                        <div class="test-card passed">
+                            <div class="test-title">${cred.name}</div>
+                            <div class="token-box">
+                                Token: ${result.data.access_token.substring(0, 50)}...
+                                <br>
+                                <button onclick="copyToClipboard('${result.data.access_token}')">Copy Token</button>
+                                <button onclick="testToken('${result.data.access_token}', '${cred.name}')">Test Token</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="test-card failed">
+                            <div class="test-title">${cred.name}</div>
+                            <div class="test-detail">❌ Login failed: ${cred.email}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += '</div>';
+            tokensDiv.innerHTML = html;
+        }
+
+        async function createTestStudent() {
+            const name = document.getElementById('testName').value;
+            const email = document.getElementById('testEmail').value;
+            const institutionName = document.getElementById('testInstitution').value;
+            
+            const result = await callAPI("/auth/signup", "POST", {
+                name: name,
+                email: email,
+                password: "test123",
+                role: "student",
+                institution_name: institutionName
+            });
+            
+            const resultDiv = document.getElementById('createResult');
+            if (result.ok) {
+                resultDiv.innerHTML = `<div class="success">✅ Student created! Token: ${result.data.access_token.substring(0, 50)}...</div>`;
+                loadUsers();
+                refreshTokens();
+            } else {
+                resultDiv.innerHTML = `<div class="error">❌ Failed: ${result.data.detail || 'Unknown error'}</div>`;
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const result = await callAPI("/auth/login", "POST", { email, password });
+            
+            const resultDiv = document.getElementById('loginResult');
+            if (result.ok) {
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Login successful!<br>
+                        Token: ${result.data.access_token.substring(0, 50)}...<br>
+                        User ID: ${result.data.user_id}<br>
+                        Role: ${result.data.role}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="error">❌ Login failed: ${result.data.detail || 'Invalid credentials'}</div>`;
+            }
+        }
+
+        async function testToken(token, name) {
+            const result = await callAPI("/auth/me", "GET", null, token);
+            if (result.ok) {
+                alert(`✅ Token valid for ${name}!\nUser: ${JSON.stringify(result.data, null, 2)}`);
+            } else {
+                alert(`❌ Token invalid for ${name}`);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Token copied to clipboard!');
+        }
+
+        function filterUsers(role) {
+            if (allUsers.length === 0) {
+                loadUsers();
+                return;
+            }
+            
+            const filtered = allUsers.filter(u => u.role === role);
+            let tableHtml = `
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+                    <tbody>
+            `;
+            filtered.forEach(user => {
+                tableHtml += `<tr><td>${user.id}</td><td>${user.name}</td><td>${user.email}</td><td>${user.role}</td></tr>`;
+            });
+            tableHtml += '</tbody></table>';
+            document.getElementById('usersList').innerHTML = tableHtml;
+        }
+
+        async function checkAPI() {
+            const result = await callAPI("/health", "GET");
+            const statusDiv = document.getElementById('apiStatus');
+            
+            if (result.ok) {
+                statusDiv.innerHTML = '🟢 API Online';
+                statusDiv.className = 'status-badge status-online';
+                return true;
+            } else {
+                statusDiv.innerHTML = '🔴 API Offline';
+                statusDiv.className = 'status-badge status-offline';
+                return false;
+            }
+        }
+
+        // Initialize dashboard
+        async function init() {
+            const apiOnline = await checkAPI();
+            if (apiOnline) {
+                await runAllTests();
+                await loadUsers();
+                await loadInstitutions();
+                await refreshTokens();
+            }
+            
+            setInterval(async () => {
+                await checkAPI();
+            }, 30000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>

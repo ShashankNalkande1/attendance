@@ -1,4 +1,4 @@
-# routes/auth.py - Updated with auto-create institution functionality
+# routes/auth.py - Complete version with login
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
@@ -16,8 +16,8 @@ class SignupRequest(BaseModel):
     password: str
     role: str
     institution_id: Optional[int] = None
-    institution_name: Optional[str] = None  # New field for auto-creating institution
-    institution_email: Optional[EmailStr] = None  # New field for institution email
+    institution_name: Optional[str] = None
+    institution_email: Optional[EmailStr] = None
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -26,66 +26,9 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
-
-def get_or_create_institution(db: Session, institution_id: Optional[int], institution_name: Optional[str], institution_email: Optional[EmailStr]) -> Optional[int]:
-    """
-    Get existing institution or create a new one
-    Returns institution_id or None
-    """
-    # If institution_id is provided, verify it exists
-    if institution_id is not None:
-        institution = db.query(User).filter(
-            User.id == institution_id,
-            User.role == UserRole.institution
-        ).first()
-        
-        if institution:
-            return institution.id
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Institution with id {institution_id} not found"
-            )
-    
-    # If institution_name is provided, try to find or create
-    if institution_name:
-        # Try to find existing institution by name
-        existing_institution = db.query(User).filter(
-            User.name == institution_name,
-            User.role == UserRole.institution
-        ).first()
-        
-        if existing_institution:
-            return existing_institution.id
-        
-        # Create new institution
-        # Use provided email or generate one
-        inst_email = institution_email if institution_email else f"{institution_name.lower().replace(' ', '_')}@institution.com"
-        
-        # Check if email already exists
-        existing_email = db.query(User).filter(User.email == inst_email).first()
-        if existing_email:
-            # Generate unique email
-            base_email = inst_email.split('@')[0]
-            inst_email = f"{base_email}_{db.query(User).count()}@institution.com"
-        
-        # Create default password for institution
-        default_password = f"inst_{institution_name.lower().replace(' ', '_')}_123"
-        
-        new_institution = User(
-            name=institution_name,
-            email=inst_email,
-            hashed_password=hash_password(default_password),
-            role=UserRole.institution,
-            institution_id=None
-        )
-        
-        db.add(new_institution)
-        db.flush()  # Get the ID without committing yet
-        
-        return new_institution.id
-    
-    return None
+    user_id: Optional[int] = None
+    role: Optional[str] = None
+    name: Optional[str] = None
 
 @router.post("/signup", response_model=TokenResponse)
 def signup(user_data: SignupRequest, db: Session = Depends(get_db)):
@@ -103,57 +46,45 @@ def signup(user_data: SignupRequest, db: Session = Depends(get_db)):
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid role. Allowed roles: student, trainer, institution, programme_manager, monitoring_officer"
+            detail=f"Invalid role. Allowed: student, trainer, institution, programme_manager, monitoring_officer"
         )
     
-    # Handle institution_id based on role
-    institution_id = None
+    # Handle institution
+    institution_id = user_data.institution_id
     
-    if role == UserRole.student:
-        # For students: try to get or create institution
-        institution_id = get_or_create_institution(
-            db, 
-            user_data.institution_id, 
-            user_data.institution_name,
-            user_data.institution_email
-        )
-        
-    elif role == UserRole.trainer:
-        # For trainers: institution_id is required
-        if user_data.institution_id is None and user_data.institution_name is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Trainer requires either institution_id or institution_name"
-            )
-        
-        institution_id = get_or_create_institution(
-            db, 
-            user_data.institution_id, 
-            user_data.institution_name,
-            user_data.institution_email
-        )
-        
-        if institution_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Could not create or find institution"
-            )
-    
-    elif role == UserRole.institution:
-        # For institutions: they don't have an institution_id
-        institution_id = None
-        
-        # Check if institution with same name already exists
-        existing_inst = db.query(User).filter(
-            User.name == user_data.name,
-            User.role == UserRole.institution
-        ).first()
-        
-        if existing_inst:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Institution with this name already exists"
-            )
+    if role == UserRole.student or role == UserRole.trainer:
+        if user_data.institution_name:
+            # Find or create institution by name
+            institution = db.query(User).filter(
+                User.name == user_data.institution_name,
+                User.role == UserRole.institution
+            ).first()
+            
+            if not institution:
+                # Create new institution
+                inst_email = user_data.institution_email or f"{user_data.institution_name.lower().replace(' ', '_')}@institution.com"
+                institution = User(
+                    name=user_data.institution_name,
+                    email=inst_email,
+                    hashed_password=hash_password(f"inst_{user_data.institution_name.lower().replace(' ', '_')}_123"),
+                    role=UserRole.institution,
+                    institution_id=None
+                )
+                db.add(institution)
+                db.flush()
+            
+            institution_id = institution.id
+        elif institution_id:
+            # Verify institution exists
+            institution = db.query(User).filter(
+                User.id == institution_id,
+                User.role == UserRole.institution
+            ).first()
+            if not institution:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Institution with id {institution_id} not found"
+                )
     
     # Create user
     hashed_pw = hash_password(user_data.password)
@@ -162,7 +93,7 @@ def signup(user_data: SignupRequest, db: Session = Depends(get_db)):
         email=user_data.email,
         hashed_password=hashed_pw,
         role=role,
-        institution_id=institution_id
+        institution_id=institution_id if role != UserRole.institution else None
     )
     
     db.add(user)
@@ -172,23 +103,50 @@ def signup(user_data: SignupRequest, db: Session = Depends(get_db)):
     # Create token
     token = create_access_token({
         "user_id": user.id,
-        "role": user.role.value
+        "role": user.role.value,
+        "email": user.email
     })
     
-    response_data = {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user_id=user.id,
+        role=user.role.value,
+        name=user.name
+    )
+
+@router.post("/login", response_model=TokenResponse)
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    """Login user and return JWT token"""
+    user = db.query(User).filter(User.email == login_data.email).first()
     
-    # If an institution was auto-created, include its credentials in response
-    if institution_id and user_data.institution_name and role == UserRole.student:
-        institution = db.query(User).filter(User.id == institution_id).first()
-        if institution and institution.created_at == user.created_at:  # Newly created
-            response_data["institution_created"] = {
-                "id": institution.id,
-                "name": institution.name,
-                "email": institution.email,
-                "default_password": f"inst_{user_data.institution_name.lower().replace(' ', '_')}_123"
-            }
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
     
-    return response_data
+    if not verify_password(login_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    # Create access token
+    token = create_access_token({
+        "user_id": user.id,
+        "role": user.role.value,
+        "email": user.email
+    })
+    
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user_id=user.id,
+        role=user.role.value,
+        name=user.name
+    )
+
+@router.get("/me")
+def get_me(current_user: dict = Depends(get_current_user)):
+    return current_user
