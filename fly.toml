@@ -1,0 +1,22 @@
+# fly.toml
+app = "attendance-system"
+
+[build]
+
+[env]
+  PORT = "8006"
+
+[processes]
+  web = "uvicorn main:app --host 0.0.0.0 --port ${PORT}"
+
+[[services]]
+  internal_port = 8006
+  protocol = "tcp"
+  
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
