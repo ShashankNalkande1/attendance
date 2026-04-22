@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 import time
 
-BASE_URL = "http://127.0.0.1:8006"
+BASE_URL = "https://attendance-pkjm.onrender.com"
 
 class TestResults:
     def __init__(self):

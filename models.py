@@ -15,7 +15,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-     DATABASE_URL = "postgresql://neondb_owner:npg_RKCJZi49dtkb@ep-shiny-band-aolnzzcu-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    raise RuntimeError("DATABASE_URL is not set")
 
 # Engine configuration
 engine = create_engine(
