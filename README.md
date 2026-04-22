@@ -20,10 +20,7 @@
 | Student | rituraj@student.com | student123 |
 | Monitor | monitor@techuniversity.com | monitor123 |
 
----
-
-## ✅ What This System Does
-
+-
 - **Students** → Mark attendance (Present/Absent/Late)
 - **Trainers** → Create batches & generate invite links
 - **Institutions** → Manage multiple batches
