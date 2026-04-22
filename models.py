@@ -1,10 +1,31 @@
-# models.py
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Enum, Boolean, Table
+# DATABASE_URL = "postgresql://neondb_owner:npg_RKCJZi49dtkb@ep-shiny-band-aolnzzcu-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+# models.py - Fixed relationship definitions
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Enum, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
 import enum
 
+load_dotenv()
+
+# Neon PostgreSQL connection
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+     DATABASE_URL = "postgresql://neondb_owner:npg_RKCJZi49dtkb@ep-shiny-band-aolnzzcu-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+# Engine configuration
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 class UserRole(enum.Enum):
@@ -30,14 +51,11 @@ class User(Base):
     institution_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationships
+    # Relationships - Fixed
     institution = relationship("User", remote_side=[id], backref="members")
-    owned_batches = relationship("Batch", back_populates="institution")
-    trained_batches = relationship("BatchTrainer", back_populates="trainer")
-    enrolled_batches = relationship("BatchStudent", back_populates="student")
-    created_invites = relationship("BatchInvite", back_populates="created_by")
-    sessions_conducted = relationship("Session", back_populates="trainer")
-    attendance_records = relationship("Attendance", back_populates="student")
+    
+    def __repr__(self):
+        return f"<User(id={self.id}, email={self.email}, role={self.role})>"
 
 class Batch(Base):
     __tablename__ = "batches"
@@ -48,11 +66,11 @@ class Batch(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
-    institution = relationship("User", back_populates="owned_batches")
-    trainers = relationship("BatchTrainer", back_populates="batch")
-    students = relationship("BatchStudent", back_populates="batch")
-    invites = relationship("BatchInvite", back_populates="batch")
-    sessions = relationship("Session", back_populates="batch")
+    institution = relationship("User", backref="batches")
+    trainers = relationship("BatchTrainer", back_populates="batch", cascade="all, delete-orphan")
+    students = relationship("BatchStudent", back_populates="batch", cascade="all, delete-orphan")
+    invites = relationship("BatchInvite", back_populates="batch", cascade="all, delete-orphan")
+    sessions = relationship("Session", back_populates="batch", cascade="all, delete-orphan")
 
 class BatchTrainer(Base):
     __tablename__ = "batch_trainers"
@@ -62,7 +80,7 @@ class BatchTrainer(Base):
     
     # Relationships
     batch = relationship("Batch", back_populates="trainers")
-    trainer = relationship("User", back_populates="trained_batches")
+    trainer = relationship("User", backref="batch_trainer_assignments")
 
 class BatchStudent(Base):
     __tablename__ = "batch_students"
@@ -72,7 +90,7 @@ class BatchStudent(Base):
     
     # Relationships
     batch = relationship("Batch", back_populates="students")
-    student = relationship("User", back_populates="enrolled_batches")
+    student = relationship("User", backref="batch_student_assignments")
 
 class BatchInvite(Base):
     __tablename__ = "batch_invites"
@@ -86,7 +104,7 @@ class BatchInvite(Base):
     
     # Relationships
     batch = relationship("Batch", back_populates="invites")
-    created_by_user = relationship("User", back_populates="created_invites")
+    created_by_user = relationship("User", backref="batch_invites_created")
 
 class Session(Base):
     __tablename__ = "sessions"
@@ -102,8 +120,8 @@ class Session(Base):
     
     # Relationships
     batch = relationship("Batch", back_populates="sessions")
-    trainer = relationship("User", back_populates="sessions_conducted")
-    attendance_records = relationship("Attendance", back_populates="session")
+    trainer = relationship("User", backref="sessions_conducted")
+    attendance_records = relationship("Attendance", back_populates="session", cascade="all, delete-orphan")
 
 class Attendance(Base):
     __tablename__ = "attendance"
@@ -116,17 +134,15 @@ class Attendance(Base):
     
     # Relationships
     session = relationship("Session", back_populates="attendance_records")
-    student = relationship("User", back_populates="attendance_records")
-
-# Database setup
-DATABASE_URL = "postgresql://user:password@localhost:5432/attendance_db"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    student = relationship("User", backref="attendance_records")
 
 def create_tables():
+    """Create all tables in the database"""
     Base.metadata.create_all(bind=engine)
+    print("✅ Tables created successfully")
 
 def get_db():
+    """Get database session"""
     db = SessionLocal()
     try:
         yield db

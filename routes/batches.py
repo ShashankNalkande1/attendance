@@ -26,7 +26,7 @@ def create_batch(
     current_user: dict = Depends(require_role(["trainer", "institution"])),
     db: Session = Depends(get_db)
 ):
-    # Verify institution exists if user is not institution owner
+    # Verify institution exists
     institution = db.query(User).filter(
         User.id == batch_data.institution_id,
         User.role == UserRole.institution

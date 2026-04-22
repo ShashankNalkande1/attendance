@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
-from models import get_db, Session as DBSession, Attendance, BatchStudent, UserRole, AttendanceStatus
+from models import get_db, Session as DBSession, Attendance, BatchStudent, AttendanceStatus
 from auth.rbac import require_role
 
 router = APIRouter(prefix="/attendance", tags=["attendance"])
